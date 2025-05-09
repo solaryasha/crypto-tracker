@@ -136,6 +136,35 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
   const supply = parseFloat(coin.supply);
   const maxSupply = coin.maxSupply ? parseFloat(coin.maxSupply) : null;
 
+  // Format large numbers with T for trillion, B for billion, rounded to hundreds
+  const formatLargeNumber = (num: number) => {
+    if (num >= 1e12) {
+      // Round to nearest hundred billion
+      const roundedT = Math.round(num / 1e11) * 1e11 / 1e12;
+      return `$${roundedT.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}T`;
+    }
+    if (num >= 1e9) {
+      // Round to nearest hundred million
+      const roundedB = Math.round(num / 1e8) * 1e8 / 1e9;
+      return `$${roundedB.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}B`;
+    }
+    if (num >= 1e6) {
+      // Round to nearest hundred thousand
+      const roundedM = Math.round(num / 1e5) * 1e5 / 1e6;
+      return `$${roundedM.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M`;
+    }
+    return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const formatSupply = (num: number) => {
+    if (num >= 1e6) {
+      // Round to nearest hundred thousand
+      const rounded = Math.round(num / 1e5) * 1e5 / 1e6;
+      return `${rounded.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M`;
+    }
+    return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex items-center gap-4 mb-8">
@@ -161,7 +190,7 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">24h Change</p>
               <p className={`text-lg ${change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                {change >= 0 ? '+' : ''}{change.toFixed(2)}%
+                {change >= 0 ? '+' : ''}{change.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
               </p>
             </div>
           </div>
@@ -172,11 +201,11 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Market Cap</p>
-              <p className="text-lg font-medium">${(marketCap / 1e9).toFixed(2)}B</p>
+              <p className="text-lg font-medium">{formatLargeNumber(marketCap)}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">24h Volume</p>
-              <p className="text-lg font-medium">${(volume / 1e9).toFixed(2)}B</p>
+              <p className="text-lg font-medium">{formatLargeNumber(volume)}</p>
             </div>
           </div>
         </div>
@@ -188,14 +217,14 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
           <div>
             <p className="text-sm text-gray-500 dark:text-gray-400">Circulating Supply</p>
             <p className="text-lg font-medium">
-              {supply.toLocaleString()} {coin.symbol}
+              {formatLargeNumber(supply)} {coin.symbol}
             </p>
           </div>
           {maxSupply && (
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Max Supply</p>
               <p className="text-lg font-medium">
-                {maxSupply.toLocaleString()} {coin.symbol}
+                {formatSupply(maxSupply)} {coin.symbol}
               </p>
             </div>
           )}

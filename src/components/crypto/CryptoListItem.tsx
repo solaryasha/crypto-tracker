@@ -3,6 +3,7 @@
 import { Asset } from '@/types/coincap';
 import Link from 'next/link';
 import { PriceTicker } from './PriceTicker';
+import { formatNumber } from '@/utils/numberFormat';
 
 interface CryptoListItemProps {
   asset: Asset;
@@ -12,34 +13,46 @@ export function CryptoListItem({ asset }: CryptoListItemProps) {
   const price = parseFloat(asset.priceUsd);
   const change = parseFloat(asset.changePercent24Hr);
   const marketCap = parseFloat(asset.marketCapUsd);
+  const vwap = parseFloat(asset.vwap24Hr);
+  const supply = parseFloat(asset.supply);
+  const volume = parseFloat(asset.volumeUsd24Hr);
   
   return (
-    <Link 
-      href={`/coin/${asset.id}`}
-      className="block p-4 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors border-b border-gray-200 dark:border-gray-800"
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex-shrink-0 w-8 h-8 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center">
-            {asset.symbol.slice(0, 1)}
-          </div>
+    <tr className="hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
+      <td className="p-4 text-gray-500">{asset.rank}</td>
+
+      <td className="p-4">
+        <Link href={`/coin/${asset.id}`} className="hover:text-blue-500">
           <div>
-            <h3 className="font-medium">{asset.name}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{asset.symbol}</p>
+            <div className="font-medium">{asset.name}</div>
+            <div className="text-sm text-gray-500">{asset.symbol}</div>
           </div>
-        </div>
-        <div className="text-right">
-          <p className="font-mono font-medium">
-            <PriceTicker price={price} key={asset.id} />
-          </p>
-          <p className={`text-sm ${change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            {change >= 0 ? '+' : ''}{change.toFixed(2)}%
-          </p>
-        </div>
-      </div>
-      <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-        Market Cap: ${(marketCap / 1e9).toFixed(2)}B
-      </div>
-    </Link>
+        </Link>
+      </td>
+
+      <td className="p-4">
+        <PriceTicker price={price} showSmallDecimals={price < 1} />
+      </td>
+
+      <td className="p-4 font-mono text-right">
+        ${formatNumber(marketCap)}
+      </td>
+
+      <td className="p-4 font-mono text-right">
+        ${formatNumber(vwap)}
+      </td>
+
+      <td className="p-4 font-mono text-right">
+        {formatNumber(supply)}
+      </td>
+
+      <td className="p-4 font-mono text-right">
+        ${formatNumber(volume)}
+      </td>
+
+      <td className={`p-4 text-right ${change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+        {change >= 0 ? '+' : ''}{change.toFixed(2)}%
+      </td>
+    </tr>
   );
 }

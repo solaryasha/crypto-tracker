@@ -12,7 +12,6 @@ export function PriceTicker({ price, className = '', showSmallDecimals = false }
 
   useEffect(() => {
     if (price !== previousPrice.current) {
-      console.log('Price changed:', price);
       setPriceChange(price > previousPrice.current ? 'up' : 'down');
       previousPrice.current = price;
 
@@ -25,9 +24,10 @@ export function PriceTicker({ price, className = '', showSmallDecimals = false }
     }
   }, [price]);
 
-  const formattedPrice = showSmallDecimals || price < 1 
-    ? price.toFixed(4) 
-    : price.toFixed(2);
+  const formattedPrice = price.toLocaleString('en-US', {
+    minimumFractionDigits: showSmallDecimals ? 4 : 2,
+    maximumFractionDigits: showSmallDecimals ? 4 : 2
+  });
 
   const animationClass = priceChange === 'up' 
     ? 'text-green-600 dark:text-green-400 animate-price-up' 
