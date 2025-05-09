@@ -51,11 +51,7 @@ export const coincapApi = {
       const data: AssetResponse = await response.json();
       return data.data;
     } catch (error) {
-      throw ErrorHandler.createError(
-        error instanceof Error ? error.message : 'Failed to fetch asset',
-        'api',
-        'major'
-      );
+      throw error;
     }
   },
 

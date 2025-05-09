@@ -3,7 +3,7 @@
 import { useEffect, use } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { coincapApi } from '@/services/coincapApi';
-import { setLoading, setCoinDetail, setError, updateCoinPrice, clearCoin } from '@/store/slices/coinDetailSlice';
+import { setLoading, setCoinDetail, setError } from '@/store/slices/coinDetailSlice';
 import { ErrorMessage } from '@/components/errors/ErrorMessage';
 import { Toast } from '@/components/errors/Toast';
 import { ErrorHandler } from '@/services/errorHandling';
@@ -19,68 +19,58 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
   const dispatch = useAppDispatch();
   const { coin, loading, error } = useAppSelector((state) => state.coinDetail);
 
-  useEffect(() => {
-    const fetchCoinDetail = async () => {
-      try {
-        dispatch(setLoading(true));
-        const asset = await coincapApi.getAssetById(resolvedParams.id);
-        dispatch(setCoinDetail(asset));
-      } catch (err) {
-        dispatch(setError(
-          ErrorHandler.createError(
-            err instanceof Error ? err.message : 'Failed to fetch coin details',
-            'api',
-            'major'
-          )
-        ));
-      }
-    };
+  // const handlePriceUpdate = async () => {
+  //   if (!coin) return;
+  //   try {
+  //     const asset = await coincapApi.getAsset(resolvedParams.id);
+  //     dispatch(updateCoinPrice({ priceUsd: asset.priceUsd }));
+  //   } catch (err) {
+  //     const isOffline = !window.navigator.onLine;
+  //     const category = isOffline ? 'network' : 'api';
+  //     dispatch(setError(
+  //       ErrorHandler.createError(
+  //         err instanceof Error ? err.message : 'Failed to update price',
+  //         category,
+  //         'minor'
+  //       )
+  //     ));
+  //   }
+  // };
 
+  const fetchCoinDetail = async () => {
+    try {
+      dispatch(setLoading(true));
+      const asset = await coincapApi.getAssetById(resolvedParams.id);
+      dispatch(setCoinDetail(asset));
+    } catch (err) {
+      const isOffline = !window.navigator.onLine;
+      const category = isOffline ? 'network' : 'api';
+      dispatch(setError(
+        ErrorHandler.createError(
+          err instanceof Error ? err.message : 'Failed to fetch coin details',
+          category,
+          'major'
+        )
+      ));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  useEffect(() => {
     fetchCoinDetail();
 
-    // // Set up polling for price updates
-    // const intervalId = setInterval(async () => {
-    //   if (!coin) return;
-    //   try {
-    //     const asset = await coincapApi.getAssetById(resolvedParams.id);
-    //     dispatch(updateCoinPrice({ priceUsd: asset.priceUsd }));
-    //   } catch (err) {
-    //     dispatch(setError(
-    //       ErrorHandler.createError(
-    //         err instanceof Error ? err.message : 'Failed to update price',
-    //         'api',
-    //         'minor'
-    //       )
-    //     ));
-    //   }
-    // }, 3000);
+    // Set up polling for price updates
+    // const intervalId = setInterval(handlePriceUpdate, 3000);
 
     // return () => {
     //   clearInterval(intervalId);
     //   dispatch(clearCoin());
     // };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedParams.id]);
 
   const handleRetry = () => {
-    dispatch(setError(
-      ErrorHandler.createError('', 'unknown', 'minor')
-    ));
-    const fetchCoinDetail = async () => {
-      try {
-        dispatch(setLoading(true));
-        const asset = await coincapApi.getAssetById(resolvedParams.id);
-        dispatch(setCoinDetail(asset));
-      } catch (err) {
-        dispatch(setError(
-          ErrorHandler.createError(
-            err instanceof Error ? err.message : 'Failed to fetch coin details',
-            'api',
-            'major'
-          )
-        ));
-      }
-    };
+    dispatch(setError(null));
     fetchCoinDetail();
   };
 
@@ -92,9 +82,7 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
         ) : (
           <Toast
             error={error}
-            onDismiss={() => dispatch(setError(
-              ErrorHandler.createError('', 'unknown', 'minor')
-            ))}
+              onDismiss={() => dispatch(setError(null))}
           />
         )}
       </div>

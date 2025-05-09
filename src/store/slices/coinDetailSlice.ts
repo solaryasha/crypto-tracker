@@ -26,7 +26,7 @@ export const coinDetailSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
-    setError: (state, action: PayloadAction<AppError>) => {
+    setError: (state, action: PayloadAction<AppError | null>) => {
       state.error = action.payload;
       state.loading = false;
     },

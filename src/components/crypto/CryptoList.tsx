@@ -19,38 +19,41 @@ export function CryptoList() {
       const assets = await coincapApi.getTopAssets();
       dispatch(setCryptos(assets));
     } catch (err) {
-      // Create a proper AppError from the caught error
+      const isOffline = !window.navigator.onLine;
+      const category = isOffline ? 'network' : 'api';
       dispatch(setError(
         ErrorHandler.createError(
           err instanceof Error ? err.message : 'Failed to fetch cryptocurrencies',
-          'api',
+          category,
           'major'
         )
       ));
+    } finally {
+      dispatch(setLoading(false));
     }
-  }, [dispatch]);
-
-  const updatePrices = useCallback(async () => {
-    if (list.length > 0) {
-      try {
-        const ids = list.map(crypto => crypto.id);
-        const updates = await coincapApi.getAssetPriceUpdates(ids);
-        updates.forEach(update => {
-          dispatch(updatePrice({ id: update.id, priceUsd: update.priceUsd }));
-        });
-      } catch (err) {
-        // For price updates, we'll show a non-blocking toast
-        dispatch(setError(
-          ErrorHandler.createError(
-            err instanceof Error ? err.message : 'Failed to update prices',
-            'api',
-            'minor'
-          )
-        ));
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // const updatePrices = useCallback(async () => {
+  //   if (list.length === 0) return;
+
+  //   try {
+  //     const ids = list.map(crypto => crypto.id);
+  //     const updates = await coincapApi.getAssetPriceUpdates(ids);
+  //     updates.forEach(update => {
+  //       dispatch(updatePrice({ id: update.id, priceUsd: update.priceUsd }));
+  //     });
+  //   } catch (err) {
+  //     // For price updates, we show a non-blocking toast
+  //     dispatch(setError(
+  //       ErrorHandler.createError(
+  //         err instanceof Error ? err.message : 'Failed to update prices',
+  //         'api',
+  //         'minor'
+  //       )
+  //     ));
+  //   }
+  // }, [dispatch, list]);
 
   useEffect(() => {
     fetchCryptos();
@@ -59,7 +62,8 @@ export function CryptoList() {
     // const intervalId = setInterval(updatePrices, 3000);
 
     // return () => clearInterval(intervalId);
-  }, [fetchCryptos, updatePrices]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return (
@@ -71,7 +75,7 @@ export function CryptoList() {
                 <div className="h-12 w-12 bg-gray-200 dark:bg-gray-800 rounded-full" />
                 <div className="space-y-2">
                   <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-24" />
-                  <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/6" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-16" />
                 </div>
               </div>
               <div className="space-y-2">
@@ -93,9 +97,7 @@ export function CryptoList() {
         ) : (
           <Toast
             error={error}
-            onDismiss={() => dispatch(setError(
-              ErrorHandler.createError('', 'unknown', 'minor')
-            ))}
+              onDismiss={() => dispatch(setError(null))}
           />
         )}
       </>
