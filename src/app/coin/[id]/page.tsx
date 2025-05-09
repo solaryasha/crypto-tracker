@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, use } from 'react';
+import { useEffect, use, useRef, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { coincapApi } from '@/services/coincapApi';
-import { setLoading, setCoinDetail, setError } from '@/store/slices/coinDetailSlice';
+import { setLoading, setCoinDetail, setError, updateCoinPrice, clearCoin } from '@/store/slices/coinDetailSlice';
 import { ErrorMessage } from '@/components/errors/ErrorMessage';
 import { Toast } from '@/components/errors/Toast';
 import { ErrorHandler } from '@/services/errorHandling';
@@ -18,26 +18,9 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
   const resolvedParams = use(params);
   const dispatch = useAppDispatch();
   const { coin, loading, error } = useAppSelector((state) => state.coinDetail);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
-  // const handlePriceUpdate = async () => {
-  //   if (!coin) return;
-  //   try {
-  //     const asset = await coincapApi.getAsset(resolvedParams.id);
-  //     dispatch(updateCoinPrice({ priceUsd: asset.priceUsd }));
-  //   } catch (err) {
-  //     const isOffline = !window.navigator.onLine;
-  //     const category = isOffline ? 'network' : 'api';
-  //     dispatch(setError(
-  //       ErrorHandler.createError(
-  //         err instanceof Error ? err.message : 'Failed to update price',
-  //         category,
-  //         'minor'
-  //       )
-  //     ));
-  //   }
-  // };
-
-  const fetchCoinDetail = async () => {
+  const fetchCoinDetail = useCallback(async () => {
     try {
       dispatch(setLoading(true));
       const asset = await coincapApi.getAssetById(resolvedParams.id);
@@ -55,22 +38,63 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
     } finally {
       dispatch(setLoading(false));
     }
-  };
+  }, [dispatch, resolvedParams.id]);
 
   useEffect(() => {
     fetchCoinDetail();
 
-    // Set up polling for price updates
-    // const intervalId = setInterval(handlePriceUpdate, 3000);
+    // Set up SSE connection for real-time price updates
+    eventSourceRef.current = new EventSource(`/api/prices/${resolvedParams.id}`);
 
-    // return () => {
-    //   clearInterval(intervalId);
-    //   dispatch(clearCoin());
-    // };
+    eventSourceRef.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.error) {
+          dispatch(setError(
+            ErrorHandler.createError(
+              data.error,
+              'api',
+              'minor'
+            )
+          ));
+          return;
+        }
+
+        
+        if (data.asset) {
+          dispatch(updateCoinPrice({ priceUsd: data.asset.priceUsd }));
+        }
+      } catch {
+        dispatch(setError(
+          ErrorHandler.createError(
+            'Failed to process price update',
+            'api',
+            'minor'
+          )
+        ));
+      }
+    };
+
+    eventSourceRef.current.onerror = () => {
+      dispatch(setError(
+        ErrorHandler.createError(
+          'Lost connection to price updates',
+          'network',
+          'minor'
+        )
+      ));
+    };
+
+    return () => {
+      console.log('Closing SSE connection');
+      eventSourceRef.current?.close();
+      dispatch(clearCoin());
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedParams.id]);
 
   const handleRetry = () => {
-    dispatch(setError(null));
+    dispatch(setError(ErrorHandler.createError('', 'unknown', 'minor')));
     fetchCoinDetail();
   };
 

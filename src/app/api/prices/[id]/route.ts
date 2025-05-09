@@ -3,21 +3,27 @@ import { coincapApi } from '@/services/coincapApi';
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
-export async function GET() {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const coinId = (await params).id;
   const encoder = new TextEncoder();
   let isConnected = true;
 
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // Function to fetch and send price updates
+        // Function to fetch and send price update for a specific coin
         const sendPriceUpdate = async () => {
           if (!isConnected) return;
 
           try {
-            const assets = await coincapApi.getTopAssets(20);
-            const data = JSON.stringify({ assets });
-            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+            const asset = await coincapApi.getAssetById(coinId);
+            const data = JSON.stringify({ asset });
+            if (isConnected) {
+              controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+            }
           } catch (error) {
             // Log error but don't kill the stream
             console.error('Price update error:', error);
@@ -34,7 +40,7 @@ export async function GET() {
         await sendPriceUpdate();
 
         // Set up interval for updates
-        const intervalId = setInterval(sendPriceUpdate, 3000);
+        const intervalId = setInterval(sendPriceUpdate, 10000);
 
         // Clean up on client disconnect
         return () => {
@@ -48,7 +54,7 @@ export async function GET() {
     },
     cancel() {
       isConnected = false;
-    }
+    },
   });
 
   return new Response(stream, {
