@@ -2,6 +2,7 @@
 
 import { Asset } from '@/types/coincap';
 import Link from 'next/link';
+import { PriceTicker } from './PriceTicker';
 
 interface CryptoListItemProps {
   asset: Asset;
@@ -11,7 +12,7 @@ export function CryptoListItem({ asset }: CryptoListItemProps) {
   const price = parseFloat(asset.priceUsd);
   const change = parseFloat(asset.changePercent24Hr);
   const marketCap = parseFloat(asset.marketCapUsd);
-
+  
   return (
     <Link 
       href={`/coin/${asset.id}`}
@@ -29,7 +30,7 @@ export function CryptoListItem({ asset }: CryptoListItemProps) {
         </div>
         <div className="text-right">
           <p className="font-mono font-medium">
-            ${price < 1 ? price.toFixed(4) : price.toFixed(2)}
+            <PriceTicker price={price} key={asset.id} />
           </p>
           <p className={`text-sm ${change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             {change >= 0 ? '+' : ''}{change.toFixed(2)}%

@@ -40,7 +40,7 @@ export async function GET(
         await sendPriceUpdate();
 
         // Set up interval for updates
-        const intervalId = setInterval(sendPriceUpdate, 10000);
+        const intervalId = setInterval(sendPriceUpdate, 30000);
 
         // Clean up on client disconnect
         return () => {

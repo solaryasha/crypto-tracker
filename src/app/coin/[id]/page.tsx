@@ -7,6 +7,7 @@ import { setLoading, setCoinDetail, setError, updateCoinPrice, clearCoin } from 
 import { ErrorMessage } from '@/components/errors/ErrorMessage';
 import { Toast } from '@/components/errors/Toast';
 import { ErrorHandler } from '@/services/errorHandling';
+import { PriceTicker } from '@/components/crypto/PriceTicker';
 
 interface CoinDetailPageProps {
   params: Promise<{
@@ -154,7 +155,7 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Current Price</p>
               <p className="text-2xl font-mono font-semibold">
-                ${price < 1 ? price.toFixed(4) : price.toFixed(2)}
+                <PriceTicker price={price} showSmallDecimals={price < 1} className="text-2xl" />
               </p>
             </div>
             <div>
