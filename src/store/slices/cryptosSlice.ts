@@ -1,17 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-interface Crypto {
-  id: string;
-  rank: string;
-  symbol: string;
-  name: string;
-  priceUsd: string;
-  marketCapUsd: string;
-  changePercent24Hr: string;
-}
+import { Asset } from '@/types/coincap';
 
 interface CryptosState {
-  list: Crypto[];
+  list: Asset[];
   loading: boolean;
   error: string | null;
 }
@@ -29,7 +20,7 @@ export const cryptosSlice = createSlice({
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
-    setCryptos: (state, action: PayloadAction<Crypto[]>) => {
+    setCryptos: (state, action: PayloadAction<Asset[]>) => {
       state.list = action.payload;
       state.loading = false;
       state.error = null;

@@ -1,21 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-interface CoinDetail {
-  id: string;
-  rank: string;
-  symbol: string;
-  name: string;
-  supply: string;
-  maxSupply: string;
-  marketCapUsd: string;
-  volumeUsd24Hr: string;
-  priceUsd: string;
-  changePercent24Hr: string;
-  vwap24Hr: string;
-}
+import { Asset } from '@/types/coincap';
 
 interface CoinDetailState {
-  coin: CoinDetail | null;
+  coin: Asset | null;
   loading: boolean;
   error: string | null;
 }
@@ -33,7 +20,7 @@ export const coinDetailSlice = createSlice({
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
-    setCoinDetail: (state, action: PayloadAction<CoinDetail>) => {
+    setCoinDetail: (state, action: PayloadAction<Asset>) => {
       state.coin = action.payload;
       state.loading = false;
       state.error = null;
