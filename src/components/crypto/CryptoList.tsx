@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { CryptoListItem } from './CryptoListItem';
 import { coincapApi } from '@/services/coincapApi';
@@ -8,10 +8,12 @@ import { setLoading, setCryptos, setError, updatePrice } from '@/store/slices/cr
 import { ErrorMessage } from '@/components/errors/ErrorMessage';
 import { Toast } from '@/components/errors/Toast';
 import { ErrorHandler } from '@/services/errorHandling';
+import { Asset } from '@/types/coincap';
 
 export function CryptoList() {
   const dispatch = useAppDispatch();
   const { list, loading, error } = useAppSelector((state) => state.cryptos);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   const fetchCryptos = useCallback(async () => {
     dispatch(setLoading(true));
@@ -31,37 +33,57 @@ export function CryptoList() {
     } finally {
       dispatch(setLoading(false));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // const updatePrices = useCallback(async () => {
-  //   if (list.length === 0) return;
-
-  //   try {
-  //     const ids = list.map(crypto => crypto.id);
-  //     const updates = await coincapApi.getAssetPriceUpdates(ids);
-  //     updates.forEach(update => {
-  //       dispatch(updatePrice({ id: update.id, priceUsd: update.priceUsd }));
-  //     });
-  //   } catch (err) {
-  //     // For price updates, we show a non-blocking toast
-  //     dispatch(setError(
-  //       ErrorHandler.createError(
-  //         err instanceof Error ? err.message : 'Failed to update prices',
-  //         'api',
-  //         'minor'
-  //       )
-  //     ));
-  //   }
-  // }, [dispatch, list]);
+  }, [dispatch]);
 
   useEffect(() => {
     fetchCryptos();
 
-    // Set up polling for price updates
-    // const intervalId = setInterval(updatePrices, 3000);
+    // Set up SSE connection
+    eventSourceRef.current = new EventSource('/api/prices');
 
-    // return () => clearInterval(intervalId);
+    eventSourceRef.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.error) {
+          dispatch(setError(
+            ErrorHandler.createError(
+              data.error,
+              'api',
+              'minor'
+            )
+          ));
+          return;
+        }
+
+        if (data.assets) {
+          data.assets.forEach((asset: Asset) => {
+            dispatch(updatePrice({ id: asset.id, priceUsd: asset.priceUsd }));
+          });
+        }
+      } catch {
+        dispatch(setError(
+          ErrorHandler.createError(
+            'Failed to process price update',
+            'api',
+            'minor'
+          )
+        ));
+      }
+    };
+
+    eventSourceRef.current.onerror = () => {
+      dispatch(setError(
+        ErrorHandler.createError(
+          'Lost connection to price updates',
+          'network',
+          'minor'
+        )
+      ));
+    };
+
+    return () => {
+      eventSourceRef.current?.close();
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -97,7 +119,7 @@ export function CryptoList() {
         ) : (
           <Toast
             error={error}
-              onDismiss={() => dispatch(setError(null))}
+              onDismiss={() => dispatch(setError(ErrorHandler.createError('', 'unknown', 'minor')))}
           />
         )}
       </>
