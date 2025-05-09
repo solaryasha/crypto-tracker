@@ -3,7 +3,10 @@
 import { useEffect, use } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { coincapApi } from '@/services/coincapApi';
-import { setLoading, setCoinDetail, setError, updateCoinPrice } from '@/store/slices/coinDetailSlice';
+import { setLoading, setCoinDetail, setError, updateCoinPrice, clearCoin } from '@/store/slices/coinDetailSlice';
+import { ErrorMessage } from '@/components/errors/ErrorMessage';
+import { Toast } from '@/components/errors/Toast';
+import { ErrorHandler } from '@/services/errorHandling';
 
 interface CoinDetailPageProps {
   params: Promise<{
@@ -23,32 +26,77 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
         const asset = await coincapApi.getAssetById(resolvedParams.id);
         dispatch(setCoinDetail(asset));
       } catch (err) {
-        dispatch(setError(err instanceof Error ? err.message : 'Failed to fetch coin details'));
+        dispatch(setError(
+          ErrorHandler.createError(
+            err instanceof Error ? err.message : 'Failed to fetch coin details',
+            'api',
+            'major'
+          )
+        ));
       }
     };
 
     fetchCoinDetail();
 
-    // Set up polling for price updates
+    // // Set up polling for price updates
     // const intervalId = setInterval(async () => {
+    //   if (!coin) return;
     //   try {
     //     const asset = await coincapApi.getAssetById(resolvedParams.id);
     //     dispatch(updateCoinPrice({ priceUsd: asset.priceUsd }));
     //   } catch (err) {
-    //     // Silent fail for update errors
-    //     console.error('Failed to update price:', err);
+    //     dispatch(setError(
+    //       ErrorHandler.createError(
+    //         err instanceof Error ? err.message : 'Failed to update price',
+    //         'api',
+    //         'minor'
+    //       )
+    //     ));
     //   }
     // }, 3000);
 
-    // return () => clearInterval(intervalId);
-  }, [dispatch, resolvedParams.id]);
+    // return () => {
+    //   clearInterval(intervalId);
+    //   dispatch(clearCoin());
+    // };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedParams.id]);
+
+  const handleRetry = () => {
+    dispatch(setError(
+      ErrorHandler.createError('', 'unknown', 'minor')
+    ));
+    const fetchCoinDetail = async () => {
+      try {
+        dispatch(setLoading(true));
+        const asset = await coincapApi.getAssetById(resolvedParams.id);
+        dispatch(setCoinDetail(asset));
+      } catch (err) {
+        dispatch(setError(
+          ErrorHandler.createError(
+            err instanceof Error ? err.message : 'Failed to fetch coin details',
+            'api',
+            'major'
+          )
+        ));
+      }
+    };
+    fetchCoinDetail();
+  };
 
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="p-4 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg">
-          {error}
-        </div>
+        {error.severity === 'major' ? (
+          <ErrorMessage error={error} onRetry={handleRetry} />
+        ) : (
+          <Toast
+            error={error}
+            onDismiss={() => dispatch(setError(
+              ErrorHandler.createError('', 'unknown', 'minor')
+            ))}
+          />
+        )}
       </div>
     );
   }

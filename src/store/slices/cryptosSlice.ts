@@ -1,10 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Asset } from '@/types/coincap';
+import { AppError } from '@/services/errorHandling';
 
 interface CryptosState {
   list: Asset[];
   loading: boolean;
-  error: string | null;
+  error: AppError | null;
 }
 
 const initialState: CryptosState = {
@@ -25,7 +26,7 @@ export const cryptosSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
-    setError: (state, action: PayloadAction<string>) => {
+    setError: (state, action: PayloadAction<AppError>) => {
       state.error = action.payload;
       state.loading = false;
     },
@@ -35,8 +36,11 @@ export const cryptosSlice = createSlice({
         crypto.priceUsd = action.payload.priceUsd;
       }
     },
+    clearError: (state) => {
+      state.error = null;
+    }
   },
 });
 
-export const { setLoading, setCryptos, setError, updatePrice } = cryptosSlice.actions;
+export const { setLoading, setCryptos, setError, updatePrice, clearError } = cryptosSlice.actions;
 export default cryptosSlice.reducer;

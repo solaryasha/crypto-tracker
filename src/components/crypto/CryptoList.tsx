@@ -4,64 +4,75 @@ import { useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { CryptoListItem } from './CryptoListItem';
 import { coincapApi } from '@/services/coincapApi';
-import { setLoading, setCryptos, setError } from '@/store/slices/cryptosSlice';
+import { setLoading, setCryptos, setError, updatePrice } from '@/store/slices/cryptosSlice';
+import { ErrorMessage } from '@/components/errors/ErrorMessage';
+import { Toast } from '@/components/errors/Toast';
+import { ErrorHandler } from '@/services/errorHandling';
 
 export function CryptoList() {
   const dispatch = useAppDispatch();
   const { list, loading, error } = useAppSelector((state) => state.cryptos);
+
+  const fetchCryptos = useCallback(async () => {
+    dispatch(setLoading(true));
+    try {
+      const assets = await coincapApi.getTopAssets();
+      dispatch(setCryptos(assets));
+    } catch (err) {
+      // Create a proper AppError from the caught error
+      dispatch(setError(
+        ErrorHandler.createError(
+          err instanceof Error ? err.message : 'Failed to fetch cryptocurrencies',
+          'api',
+          'major'
+        )
+      ));
+    }
+  }, [dispatch]);
 
   const updatePrices = useCallback(async () => {
     if (list.length > 0) {
       try {
         const ids = list.map(crypto => crypto.id);
         const updates = await coincapApi.getAssetPriceUpdates(ids);
-        dispatch(setCryptos(updates));
+        updates.forEach(update => {
+          dispatch(updatePrice({ id: update.id, priceUsd: update.priceUsd }));
+        });
       } catch (err) {
-        console.error('Failed to update prices:', err);
+        // For price updates, we'll show a non-blocking toast
+        dispatch(setError(
+          ErrorHandler.createError(
+            err instanceof Error ? err.message : 'Failed to update prices',
+            'api',
+            'minor'
+          )
+        ));
       }
     }
-  }, [dispatch, list]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    const fetchCryptos = async () => {
-      try {
-        dispatch(setLoading(true));
-        const assets = await coincapApi.getTopAssets();
-        dispatch(setCryptos(assets));
-      } catch (err) {
-        dispatch(setError(err instanceof Error ? err.message : 'Failed to fetch cryptocurrencies'));
-      }
-    };
-
     fetchCryptos();
 
     // Set up polling for price updates
     // const intervalId = setInterval(updatePrices, 3000);
 
     // return () => clearInterval(intervalId);
-  }, []);
+  }, [fetchCryptos, updatePrices]);
 
-  if (error) {
+  if (loading) {
     return (
-      <div className="p-4 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg">
-        {error}
-      </div>
-    );
-  }
-
-  if (loading && list.length === 0) {
-    return (
-      <div className="space-y-4">
-        {[...Array(10)].map((_, index) => (
-          <div
-            key={index}
-            className="animate-pulse p-4 border-b border-gray-200 dark:border-gray-800"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-800 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/4" />
-                <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/6" />
+      <div className="divide-y divide-gray-200 dark:divide-gray-800">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="p-4 animate-pulse">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="h-12 w-12 bg-gray-200 dark:bg-gray-800 rounded-full" />
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-24" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/6" />
+                </div>
               </div>
               <div className="space-y-2">
                 <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-20" />
@@ -71,6 +82,23 @@ export function CryptoList() {
           </div>
         ))}
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        {error.severity === 'major' ? (
+          <ErrorMessage error={error} onRetry={fetchCryptos} />
+        ) : (
+          <Toast
+            error={error}
+            onDismiss={() => dispatch(setError(
+              ErrorHandler.createError('', 'unknown', 'minor')
+            ))}
+          />
+        )}
+      </>
     );
   }
 

@@ -1,10 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Asset } from '@/types/coincap';
+import { AppError } from '@/services/errorHandling';
 
 interface CoinDetailState {
   coin: Asset | null;
   loading: boolean;
-  error: string | null;
+  error: AppError | null;
 }
 
 const initialState: CoinDetailState = {
@@ -25,7 +26,7 @@ export const coinDetailSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
-    setError: (state, action: PayloadAction<string>) => {
+    setError: (state, action: PayloadAction<AppError>) => {
       state.error = action.payload;
       state.loading = false;
     },
@@ -39,8 +40,11 @@ export const coinDetailSlice = createSlice({
       state.error = null;
       state.loading = false;
     },
+    clearError: (state) => {
+      state.error = null;
+    }
   },
 });
 
-export const { setLoading, setCoinDetail, setError, updateCoinPrice, clearCoin } = coinDetailSlice.actions;
+export const { setLoading, setCoinDetail, setError, updateCoinPrice, clearCoin, clearError } = coinDetailSlice.actions;
 export default coinDetailSlice.reducer;
