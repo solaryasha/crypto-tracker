@@ -1,4 +1,5 @@
 import { ChangeEvent, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { ReactElement } from 'react';
 
 export type FilterField = 'priceUsd' | 'volumeUsd24Hr' | 'changePercent24Hr' | 'marketCapUsd';
@@ -19,8 +20,14 @@ interface CryptoFiltersProps {
 }
 
 export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): ReactElement {
-  const [field, setField] = useState<FilterField>('priceUsd');
-  const [range, setRange] = useState<FilterRange>({ min: '', max: '' });
+  const searchParams = useSearchParams();
+  const [field, setField] = useState<FilterField>(() => {
+    return (searchParams.get('filterField') as FilterField) || 'priceUsd';
+  });
+  const [range, setRange] = useState<FilterRange>(() => ({
+    min: searchParams.get('filterMin') || '',
+    max: searchParams.get('filterMax') || ''
+  }));
 
   const formatNumberWithCommas = (value: string): string => {
     if (!value) return '';

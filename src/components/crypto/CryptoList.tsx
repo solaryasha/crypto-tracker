@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useRef, useState, useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { CryptoListItem } from './CryptoListItem';
 import { CryptoFilters, FilterConfig } from './CryptoFilters';
@@ -17,11 +18,55 @@ type SortDirection = 'asc' | 'desc';
 
 export function CryptoList() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { list, loading, error } = useAppSelector((state) => state.cryptos);
   const eventSourceRef = useRef<EventSource | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [activeFilter, setActiveFilter] = useState<FilterConfig | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey | null>(() => {
+    const key = searchParams.get('sort');
+    return (key as SortKey) || null;
+  });
+  const [sortDirection, setSortDirection] = useState<SortDirection>(() => {
+    return (searchParams.get('order') as SortDirection) || 'desc';
+  });
+  const [activeFilter, setActiveFilter] = useState<FilterConfig | null>(() => {
+    const field = searchParams.get('filterField');
+    const min = searchParams.get('filterMin');
+    const max = searchParams.get('filterMax');
+
+    if (field && (min || max)) {
+      return {
+        field: field as keyof Asset,
+        range: {
+          min: min || '',
+          max: max || ''
+        }
+      };
+    }
+    return null;
+  });
+
+  const updateQueryParams = useCallback((params: {
+    sort?: string | null;
+    order?: string | null;
+    filterField?: string | null;
+    filterMin?: string | null;
+    filterMax?: string | null;
+  }) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === null) {
+        newSearchParams.delete(key);
+      } else {
+        newSearchParams.set(key, value);
+      }
+    });
+
+    const queryString = newSearchParams.toString();
+    const newUrl = queryString ? `?${queryString}` : window.location.pathname;
+    router.push(newUrl);
+  }, [router, searchParams]);
 
   const fetchCryptos = useCallback(async () => {
     dispatch(setLoading(true));
@@ -96,12 +141,13 @@ export function CryptoList() {
   }, []);
 
   const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortKey(key);
-      setSortDirection('desc');
-    }
+    const newDirection = sortKey === key && sortDirection === 'desc' ? 'asc' : 'desc';
+    setSortKey(key);
+    setSortDirection(newDirection);
+    updateQueryParams({
+      sort: key,
+      order: newDirection
+    });
   };
 
   const getSortIcon = (key: SortKey) => {
@@ -150,15 +196,22 @@ export function CryptoList() {
   }, [list, sortKey, sortDirection, activeFilter]);
 
   const handleApplyFilter = (filterConfig: FilterConfig) => {
-    console.log('handleApplyFilter called with', filterConfig);
     setActiveFilter(filterConfig);
+    updateQueryParams({
+      filterField: filterConfig.field,
+      filterMin: filterConfig.range.min,
+      filterMax: filterConfig.range.max
+    });
   };
 
   const handleResetFilter = () => {
     setActiveFilter(null);
+    updateQueryParams({
+      filterField: null,
+      filterMin: null,
+      filterMax: null
+    });
   };
-
-  console.log('activeFilter', activeFilter);
 
   if (loading) {
     return (
