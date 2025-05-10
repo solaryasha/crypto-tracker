@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useRef, useState, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { CryptoListItem } from './CryptoListItem';
+import { CryptoFilters, FilterConfig } from './CryptoFilters';
 import { coincapApi } from '@/services/coincapApi';
 import { setLoading, setCryptos, setError, updatePrice } from '@/store/slices/cryptosSlice';
 import { ErrorMessage } from '@/components/errors/ErrorMessage';
@@ -11,15 +12,16 @@ import { ErrorHandler } from '@/services/errorHandling';
 import { Asset } from '@/types/coincap';
 import { ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 
-type SortKey = 'priceUsd' | 'volumeUsd24Hr' | 'changePercent24Hr';
+type SortKey = 'priceUsd' | 'volumeUsd24Hr' | 'changePercent24Hr' | 'marketCapUsd';
 type SortDirection = 'asc' | 'desc';
 
 export function CryptoList() {
   const dispatch = useAppDispatch();
   const { list, loading, error } = useAppSelector((state) => state.cryptos);
   const eventSourceRef = useRef<EventSource | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>('priceUsd');
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [activeFilter, setActiveFilter] = useState<FilterConfig | null>(null);
 
   const fetchCryptos = useCallback(async () => {
     dispatch(setLoading(true));
@@ -111,15 +113,52 @@ export function CryptoList() {
       : <ArrowDown className="inline-block w-4 h-4 ml-1" />;
   };
 
-  const sortedList = useMemo(() => {
-    return list.toSorted((a, b) => {
+  const parseCurrencyString = (value: string): number => {
+    return Number(value.replace(/[^0-9.-]+/g, ''));
+  };
+
+  const filteredAndSortedList = useMemo(() => {
+    let result = list;
+
+    // Apply filters if they exist
+    if (activeFilter) {
+      const min = activeFilter.range.min !== '' ? parseCurrencyString(activeFilter.range.min) : null;
+      const max = activeFilter.range.max !== '' ? parseCurrencyString(activeFilter.range.max) : null;
+
+      result = result.filter(item => {
+        const value = parseFloat(item[activeFilter.field]);
+        if (min !== null && max !== null) {
+          return value >= min && value <= max;
+        } else if (min !== null) {
+          return value >= min;
+        } else if (max !== null) {
+          return value <= max;
+        }
+        return true;
+      });
+    }
+
+    // Apply sorting
+    if (!sortKey) return result;
+
+    return result.toSorted((a, b) => {
       const multiplier = sortDirection === 'asc' ? 1 : -1;
       const aValue = parseFloat(a[sortKey]);
       const bValue = parseFloat(b[sortKey]);
       return (aValue - bValue) * multiplier;
     });
-  }, [list, sortKey, sortDirection]);
+  }, [list, sortKey, sortDirection, activeFilter]);
 
+  const handleApplyFilter = (filterConfig: FilterConfig) => {
+    console.log('handleApplyFilter called with', filterConfig);
+    setActiveFilter(filterConfig);
+  };
+
+  const handleResetFilter = () => {
+    setActiveFilter(null);
+  };
+
+  console.log('activeFilter', activeFilter);
 
   if (loading) {
     return (
@@ -194,38 +233,49 @@ export function CryptoList() {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="text-sm font-medium text-gray-500 border-b border-gray-200 dark:border-gray-800">
-            <th scope="col" className="p-4 text-left font-medium">Rank</th>
-            <th scope="col" className="p-4 text-left font-medium">Name</th>
-            <th scope="col" className="p-4 text-left font-medium cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('priceUsd')}>
-              <span className="inline-flex items-center">
-                Price {getSortIcon('priceUsd')}
-              </span>
-            </th>
-            <th scope="col" className="p-4 text-right font-medium">Market Cap</th>
-            <th scope="col" className="p-4 text-right font-medium">VWAP (24Hr)</th>
-            <th scope="col" className="p-4 text-right font-medium">Supply</th>
-            <th scope="col" className="p-4 text-right font-medium cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('volumeUsd24Hr')}>
-              <span className="inline-flex items-center justify-end">
-                Volume (24Hr) {getSortIcon('volumeUsd24Hr')}
-              </span>
-            </th>
-            <th scope="col" className="p-4 text-right font-medium cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('changePercent24Hr')}>
-              <span className="inline-flex items-center justify-end">
-                Change (24Hr) {getSortIcon('changePercent24Hr')}
-              </span>
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-          {sortedList.map((crypto) => (
-            <CryptoListItem key={crypto.id} asset={crypto} />
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-4">
+      <CryptoFilters
+        onApplyFilter={handleApplyFilter}
+        onReset={handleResetFilter}
+      />
+
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="text-sm font-medium text-gray-500 border-b border-gray-200 dark:border-gray-800">
+              <th scope="col" className="p-4 text-left font-medium">Rank</th>
+              <th scope="col" className="p-4 text-left font-medium">Name</th>
+              <th scope="col" className="p-4 text-left font-medium cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('priceUsd')}>
+                <span className="inline-flex items-center">
+                  Price {getSortIcon('priceUsd')}
+                </span>
+              </th>
+              <th scope="col" className="p-4 text-right font-medium cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('marketCapUsd')}>
+                <span className="inline-flex items-center justify-end">
+                  Market Cap {getSortIcon('marketCapUsd')}
+                </span>
+              </th>
+              <th scope="col" className="p-4 text-right font-medium">VWAP (24Hr)</th>
+              <th scope="col" className="p-4 text-right font-medium">Supply</th>
+              <th scope="col" className="p-4 text-right font-medium cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('volumeUsd24Hr')}>
+                <span className="inline-flex items-center justify-end">
+                  Volume (24Hr) {getSortIcon('volumeUsd24Hr')}
+                </span>
+              </th>
+              <th scope="col" className="p-4 text-right font-medium cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('changePercent24Hr')}>
+                <span className="inline-flex items-center justify-end">
+                  Change (24Hr) {getSortIcon('changePercent24Hr')}
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+            {filteredAndSortedList.map((crypto) => (
+              <CryptoListItem key={crypto.id} asset={crypto} />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
