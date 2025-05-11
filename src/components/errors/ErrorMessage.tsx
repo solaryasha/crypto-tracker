@@ -2,10 +2,9 @@ import { AppError } from '@/services/errorHandling';
 
 interface ErrorMessageProps {
   error: AppError;
-  onRetry?: () => void;
 }
 
-export const ErrorMessage = ({ error, onRetry }: ErrorMessageProps) => {
+export const ErrorMessage = ({ error }: ErrorMessageProps) => {
   const isBlocking = error.severity === 'major';
 
   return (
@@ -26,23 +25,6 @@ export const ErrorMessage = ({ error, onRetry }: ErrorMessageProps) => {
           <h3 className={`text-sm font-medium ${isBlocking ? 'text-red-800' : 'text-yellow-800'}`}>
             {error.userMessage}
           </h3>
-          {onRetry && (
-            <div className="mt-4">
-              <button
-                type="button"
-                onClick={onRetry}
-                className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md ${
-                  isBlocking
-                    ? 'text-red-700 bg-red-100 hover:bg-red-200'
-                    : 'text-yellow-700 bg-yellow-100 hover:bg-yellow-200'
-                } focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  isBlocking ? 'focus:ring-red-500' : 'focus:ring-yellow-500'
-                }`}
-              >
-                Try again
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

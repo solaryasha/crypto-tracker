@@ -9,7 +9,6 @@ export interface AppError {
   timestamp: Date;
   isBlocking: boolean;
   statusCode?: number;
-  retryCount?: number;
 }
 
 export class ErrorHandler {
@@ -17,18 +16,16 @@ export class ErrorHandler {
     error: Error | string,
     category: ErrorCategory = 'unknown',
     severity: ErrorSeverity = 'minor',
-    statusCode?: number,
-    retryCount?: number
+    statusCode?: number
   ): AppError {
     const message = error instanceof Error ? error.message : error;
     return {
       message,
-      userMessage: this.translateErrorToUserMessage(message, category, retryCount),
+      userMessage: this.translateErrorToUserMessage(message, category, statusCode),
       severity,
       category,
       timestamp: new Date(),
       isBlocking: severity === 'major',
-      retryCount,
       statusCode
     };
   }
@@ -36,18 +33,15 @@ export class ErrorHandler {
   private static translateErrorToUserMessage(
     message: string,
     category: ErrorCategory,
-    retryCount?: number
+    statusCode?: number,
   ): string {
     // API specific errors
     if (category === 'api') {
-      if (message.includes('429')) {
-        return 'We\'re experiencing high traffic. Please try again in a moment.';
+      if (statusCode === 429 || message.includes('429')) {
+        return "We're experiencing high traffic. Please try again in a moment.";
       }
-      if (message.includes('404')) {
+      if (statusCode === 404 || message.includes('404')) {
         return 'The requested cryptocurrency information could not be found.';
-      }
-      if (retryCount !== undefined) {
-        return `Unable to fetch cryptocurrency data. Retrying... (Attempt ${retryCount})`;
       }
       return 'Unable to fetch cryptocurrency data. Please try again later.';
     }
@@ -60,17 +54,11 @@ export class ErrorHandler {
       if (message.includes('offline')) {
         return 'You appear to be offline. Please check your internet connection.';
       }
-      if (retryCount !== undefined) {
-        return `Connection issues detected. Retrying... (Attempt ${retryCount})`;
-      }
       return 'Please check your internet connection and try again.';
     }
 
     // Timeout specific errors
     if (category === 'timeout') {
-      if (retryCount !== undefined) {
-        return `Request timed out. Retrying... (Attempt ${retryCount})`;
-      }
       return 'The request took too long to complete. Please try again.';
     }
 
@@ -80,9 +68,6 @@ export class ErrorHandler {
     }
 
     // Default/unknown errors
-    if (retryCount !== undefined) {
-      return `An error occurred. Retrying... (Attempt ${retryCount})`;
-    }
     return 'An unexpected error occurred. Please try again later.';
   }
 }

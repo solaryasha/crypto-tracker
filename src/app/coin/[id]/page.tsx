@@ -6,10 +6,11 @@ import { coincapApi } from '@/services/coincapApi';
 import { setLoading, setCoinDetail, setError, updateCoinPrice, clearCoin } from '@/store/slices/coinDetailSlice';
 import { ErrorMessage } from '@/components/errors/ErrorMessage';
 import { Toast } from '@/components/errors/Toast';
-import { ErrorHandler } from '@/services/errorHandling';
+import { ErrorHandler, AppError } from '@/services/errorHandling'; // Import AppError
 import { PriceTicker } from '@/components/crypto/PriceTicker';
 import { useTheme } from 'next-themes';
 import cn from 'classnames'
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 interface CoinDetailPageProps {
   params: Promise<{
@@ -22,8 +23,16 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
   const dispatch = useAppDispatch();
   const { coin, loading, error } = useAppSelector((state) => state.coinDetail);
   const eventSourceRef = useRef<EventSource | null>(null);
-
+  const router = useRouter(); // Initialize useRouter
   const { theme } = useTheme();
+
+  const handleError = useCallback((appError: AppError) => {
+    if (appError.statusCode === 404) {
+      router.push('/not-found');
+    } else {
+      dispatch(setError(appError));
+    }
+  }, [dispatch, router]);
 
   const fetchCoinDetail = useCallback(async () => {
     try {
@@ -31,19 +40,11 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
       const asset = await coincapApi.getAssetById(resolvedParams.id);
       dispatch(setCoinDetail(asset));
     } catch (err) {
-      const isOffline = !window.navigator.onLine;
-      const category = isOffline ? 'network' : 'api';
-      dispatch(setError(
-        ErrorHandler.createError(
-          err instanceof Error ? err.message : 'Failed to fetch coin details',
-          category,
-          'major'
-        )
-      ));
+      handleError(err as AppError); // Cast to AppError
     } finally {
       dispatch(setLoading(false));
     }
-  }, [dispatch, resolvedParams.id]);
+  }, [dispatch, resolvedParams.id, handleError]);
 
   useEffect(() => {
     fetchCoinDetail();
@@ -55,13 +56,14 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
       try {
         const data = JSON.parse(event.data);
         if (data.error) {
-          dispatch(setError(
-            ErrorHandler.createError(
-              data.error,
-              'api',
-              'minor'
-            )
-          ));
+          const statusCode = data.statusCode; // Get statusCode from SSE data
+          const appError = ErrorHandler.createError(
+            data.error,
+            'api',
+            'minor',
+            statusCode
+          );
+          handleError(appError);
           return;
         }
 
@@ -69,25 +71,24 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
         if (data.asset) {
           dispatch(updateCoinPrice({ priceUsd: data.asset.priceUsd }));
         }
-      } catch {
-        dispatch(setError(
-          ErrorHandler.createError(
-            'Failed to process price update',
-            'api',
-            'minor'
-          )
-        ));
+      } catch (parseError) { // Changed variable name to avoid conflict
+        console.error('Failed to parse price update from SSE:', parseError);
+        const appError = ErrorHandler.createError(
+          'Failed to process price update',
+          'api',
+          'minor'
+        );
+        handleError(appError);
       }
     };
 
     eventSourceRef.current.onerror = () => {
-      dispatch(setError(
-        ErrorHandler.createError(
-          'Lost connection to price updates',
-          'network',
-          'minor'
-        )
-      ));
+      const appError = ErrorHandler.createError(
+        'Lost connection to price updates',
+        'network',
+        'minor'
+      );
+      handleError(appError);
     };
 
     return () => {
@@ -96,18 +97,13 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
       dispatch(clearCoin());
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resolvedParams.id]);
-
-  const handleRetry = () => {
-    dispatch(setError(ErrorHandler.createError('', 'unknown', 'minor')));
-    fetchCoinDetail();
-  };
+  }, [resolvedParams.id, fetchCoinDetail, handleError]); // Added fetchCoinDetail and handleError to dependencies
 
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {error.severity === 'major' ? (
-          <ErrorMessage error={error} onRetry={handleRetry} />
+          <ErrorMessage error={error} /> // Removed onRetry
         ) : (
           <Toast
             error={error}

@@ -27,10 +27,6 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('Uncaught error:', error, errorInfo);
   }
 
-  private handleRetry = () => {
-    this.setState({ hasError: false, error: null });
-  };
-
   public render() {
     if (this.state.hasError && this.state.error) {
       if (this.props.fallback) {
@@ -43,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
         'major'
       );
 
-      return <ErrorMessage error={appError} onRetry={this.handleRetry} />;
+      return <ErrorMessage error={appError} />;
     }
 
     return this.props.children;

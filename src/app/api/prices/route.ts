@@ -23,8 +23,15 @@ export async function GET() {
             console.error('Price update error:', error);
             if (isConnected) {
               const errorMessage = error instanceof Error ? error.message : 'Price update failed';
+              // Define a type for the error structure if known
+              interface ApiError extends Error {
+                response?: {
+                  status?: number;
+                };
+              }
+              const statusCode = (error as ApiError)?.response?.status || 500;
               controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ error: errorMessage })}\n\n`)
+                encoder.encode(`data: ${JSON.stringify({ error: errorMessage, statusCode })}\n\n`)
               );
             }
           }
