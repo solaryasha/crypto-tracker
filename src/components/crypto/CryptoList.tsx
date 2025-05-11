@@ -314,12 +314,12 @@ export function CryptoList() {
                   Market Cap {getSortIcon('marketCapUsd')}
                 </span>
               </th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground hidden md:table-cell transition-opacity cursor-pointer group" onClick={() => handleSort('vwap')}>
+              <th scope="col" className="p-4 text-right font-medium text-foreground hidden md:table-cell transition-opacity cursor-pointer group">
                 <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
                   VWAP (24Hr)
                 </span>
               </th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground hidden lg:table-cell transition-opacity cursor-pointer group" onClick={() => handleSort('supply')}>
+              <th scope="col" className="p-4 text-right font-medium text-foreground hidden lg:table-cell transition-opacity cursor-pointer group">
                 <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
                   Supply
                 </span>

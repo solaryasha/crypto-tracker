@@ -98,11 +98,11 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
 
   return (
     <div className="flex flex-col gap-4 p-4 bg-background rounded-lg border border-gray-200 dark:border-gray-700">
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
         <select
           value={field}
           onChange={(e) => setField(e.target.value as FilterField)}
-          className="p-2 bg-background border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-foreground"
+          className="w-full lg:w-auto p-2 bg-background border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-foreground"
         >
           <option value="priceUsd">Price (USD)</option>
           <option value="volumeUsd24Hr">Volume 24h (USD)</option>
@@ -110,42 +110,44 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
           <option value="marketCapUsd">Market Cap (USD)</option>
         </select>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full lg:w-auto">
           <span className="text-foreground/70">$</span>
           <input
             type="text"
             placeholder="Min"
             value={range.min}
             onChange={handleMinChange}
-            className={getInputClassName(range.min)}
+            className={`${getInputClassName(range.min)} w-full lg:w-48`}
           />
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full lg:w-auto">
           <span className="text-foreground/70">$</span>
           <input
             type="text"
             placeholder="Max"
             value={range.max}
             onChange={handleMaxChange}
-            className={getInputClassName(range.max)}
+            className={`${getInputClassName(range.max)} w-full lg:w-48`}
           />
         </div>
 
-        <button
-          onClick={handleApply}
-          disabled={!isRangeValid()}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-        >
-          Apply
-        </button>
-        
-        <button
-          onClick={handleReset}
-          className="px-4 py-2 border border-gray-200 dark:border-gray-700 bg-card text-card-foreground rounded hover:bg-accent focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
-        >
-          Reset
-        </button>
+        <div className="flex gap-2 w-full lg:w-auto">
+          <button
+            onClick={handleApply}
+            disabled={!isRangeValid()}
+            className="flex-1 lg:flex-none px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            Apply
+          </button>
+
+          <button
+            onClick={handleReset}
+            className="flex-1 lg:flex-none px-4 py-2 border border-gray-200 dark:border-gray-700 bg-card text-card-foreground rounded hover:bg-accent focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
+          >
+            Reset
+          </button>
+        </div>
       </div>
     </div>
   );
