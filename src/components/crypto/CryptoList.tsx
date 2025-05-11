@@ -208,10 +208,14 @@ export function CryptoList() {
 
   const handleResetFilter = () => {
     setActiveFilter(null);
+    setSortKey(null);
+    setSortDirection('desc');
     updateQueryParams({
       filterField: null,
       filterMin: null,
-      filterMax: null
+      filterMax: null,
+      sort: null,
+      order: null
     });
   };
 
@@ -300,25 +304,25 @@ export function CryptoList() {
             <tr className="text-sm border-b border-gray-200 dark:border-gray-800">
               <th scope="col" className="p-4 text-left font-medium text-foreground">Rank</th>
               <th scope="col" className="p-4 text-left font-medium text-foreground">Name</th>
-              <th scope="col" className="p-4 text-left font-medium text-foreground cursor-pointer hover:text-foreground/70" onClick={() => handleSort('priceUsd')}>
-                <span className="inline-flex items-center">
+              <th scope="col" className="p-4 text-left font-medium text-foreground transition-opacity cursor-pointer group" onClick={() => handleSort('priceUsd')}>
+                <span className="inline-flex items-center opacity-100 group-hover:opacity-60">
                   Price {getSortIcon('priceUsd')}
                 </span>
               </th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground cursor-pointer hover:text-foreground/70" onClick={() => handleSort('marketCapUsd')}>
-                <span className="inline-flex items-center justify-end">
+              <th scope="col" className="p-4 text-right font-medium text-foreground transition-opacity cursor-pointer group" onClick={() => handleSort('marketCapUsd')}>
+                <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
                   Market Cap {getSortIcon('marketCapUsd')}
                 </span>
               </th>
               <th scope="col" className="p-4 text-right font-medium text-foreground">VWAP (24Hr)</th>
               <th scope="col" className="p-4 text-right font-medium text-foreground">Supply</th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground cursor-pointer hover:text-foreground/70" onClick={() => handleSort('volumeUsd24Hr')}>
-                <span className="inline-flex items-center justify-end">
+              <th scope="col" className="p-4 text-right font-medium text-foreground transition-opacity cursor-pointer group" onClick={() => handleSort('volumeUsd24Hr')}>
+                <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
                   Volume (24Hr) {getSortIcon('volumeUsd24Hr')}
                 </span>
               </th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground cursor-pointer hover:text-foreground/70" onClick={() => handleSort('changePercent24Hr')}>
-                <span className="inline-flex items-center justify-end">
+              <th scope="col" className="p-4 text-right font-medium text-foreground transition-opacity cursor-pointer group" onClick={() => handleSort('changePercent24Hr')}>
+                <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
                   Change (24Hr) {getSortIcon('changePercent24Hr')}
                 </span>
               </th>
