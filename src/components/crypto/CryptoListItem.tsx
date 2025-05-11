@@ -7,7 +7,7 @@ import { formatNumber } from '@/utils/numberFormat';
 import { useTheme } from 'next-themes';
 import cn from 'classnames';
 import { useRouter } from 'next/navigation';
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface CryptoListItemProps {
   asset: Asset;
