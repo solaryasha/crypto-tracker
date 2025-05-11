@@ -77,13 +77,14 @@ export function CryptoList() {
     const newSearchParams = new URLSearchParams(searchParams.toString());
 
     Object.entries(params).forEach(([key, value]) => {
-      if (value === null) {
+      if (value === null || value === '') {
         newSearchParams.delete(key);
       } else {
         newSearchParams.set(key, value);
       }
     });
 
+    // Remove the query string if there are no parameters
     const queryString = newSearchParams.toString();
     const newUrl = queryString ? `?${queryString}` : window.location.pathname;
     router.push(newUrl);
