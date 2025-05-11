@@ -1,8 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { useTheme } from 'next-themes';
-import cn from 'classnames';
 import { BackButton } from '@/components/BackButton';
 
 export default function CoinLayout({
