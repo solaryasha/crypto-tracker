@@ -8,6 +8,8 @@ import { ErrorMessage } from '@/components/errors/ErrorMessage';
 import { Toast } from '@/components/errors/Toast';
 import { ErrorHandler } from '@/services/errorHandling';
 import { PriceTicker } from '@/components/crypto/PriceTicker';
+import { useTheme } from 'next-themes';
+import cn from 'classnames'
 
 interface CoinDetailPageProps {
   params: Promise<{
@@ -20,6 +22,8 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
   const dispatch = useAppDispatch();
   const { coin, loading, error } = useAppSelector((state) => state.coinDetail);
   const eventSourceRef = useRef<EventSource | null>(null);
+
+  const { theme } = useTheme();
 
   const fetchCoinDetail = useCallback(async () => {
     try {
@@ -168,61 +172,87 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-12 h-12 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center text-lg font-semibold">
+        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center text-lg font-semibold", {
+          "bg-gray-200": theme === 'light',
+          "dark:bg-gray-800": theme === 'dark',
+        })}>
           {coin.symbol.slice(0, 1)}
         </div>
         <div>
           <h1 className="text-3xl font-bold">{coin.name}</h1>
-          <p className="text-gray-500 dark:text-gray-400">{coin.symbol}</p>
+          <p className={cn("text-gray-500", {
+            "dark:text-gray-400": theme === 'dark'
+          })}>{coin.symbol}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <div className={cn("p-6 bg-white rounded-lg shadow-sm", {
+          "dark:bg-gray-800": theme === 'dark'
+        })}>
           <h2 className="text-lg font-semibold mb-4">Price Information</h2>
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Current Price</p>
+              <p className={cn("text-sm text-gray-500", {
+                "dark:text-gray-400": theme === 'dark'
+              })}>Current Price</p>
               <p className="text-2xl font-mono font-semibold">
                 <PriceTicker price={price} showSmallDecimals={price < 1} className="text-2xl" />
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">24h Change</p>
-              <p className={`text-lg ${change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+              <p className={cn("text-sm text-gray-500", {
+                "dark:text-gray-400": theme === 'dark'
+              })}>24h Change</p>
+              <p className={cn("text-lg", {
+                "text-green-600 dark:text-green-400": change >= 0,
+                "text-red-600 dark:text-red-400": change < 0
+              })}>
                 {change >= 0 ? '+' : ''}{change.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
               </p>
             </div>
           </div>
         </div>
 
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <div className={cn("p-6 bg-white rounded-lg shadow-sm", {
+          "dark:bg-gray-800": theme === 'dark'
+        })}>
           <h2 className="text-lg font-semibold mb-4">Market Information</h2>
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Market Cap</p>
+              <p className={cn("text-sm text-gray-500", {
+                "dark:text-gray-400": theme === 'dark'
+              })}>Market Cap</p>
               <p className="text-lg font-medium">{formatLargeNumber(marketCap)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">24h Volume</p>
+              <p className={cn("text-sm text-gray-500", {
+                "dark:text-gray-400": theme === 'dark'
+              })}>24h Volume</p>
               <p className="text-lg font-medium">{formatLargeNumber(volume)}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+      <div className={cn("p-6 bg-white rounded-lg shadow-sm", {
+        "dark:bg-gray-800": theme === 'dark'
+      })}>
         <h2 className="text-lg font-semibold mb-4">Supply Information</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Circulating Supply</p>
+            <p className={cn("text-sm text-gray-500", {
+              "dark:text-gray-400": theme === 'dark'
+            })}>Circulating Supply</p>
             <p className="text-lg font-medium">
               {formatLargeNumber(supply)} {coin.symbol}
             </p>
           </div>
           {maxSupply && (
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Max Supply</p>
+              <p className={cn("text-sm text-gray-500", {
+                "dark:text-gray-400": theme === 'dark'
+              })}>Max Supply</p>
               <p className="text-lg font-medium">
                 {formatSupply(maxSupply)} {coin.symbol}
               </p>

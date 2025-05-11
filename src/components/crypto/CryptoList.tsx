@@ -4,7 +4,7 @@ import { useEffect, useCallback, useRef, useState, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { CryptoListItem } from './CryptoListItem';
-import { CryptoFilters, FilterConfig } from './CryptoFilters';
+import { CryptoFilters, FilterConfig, FilterField } from './CryptoFilters';
 import { coincapApi } from '@/services/coincapApi';
 import { setLoading, setCryptos, setError, updatePrice } from '@/store/slices/cryptosSlice';
 import { ErrorMessage } from '@/components/errors/ErrorMessage';
@@ -36,7 +36,7 @@ export function CryptoList() {
 
     if (field && (min || max)) {
       return {
-        field: field as keyof Asset,
+        field: field as FilterField,
         range: {
           min: min || '',
           max: max || ''
@@ -295,27 +295,27 @@ export function CryptoList() {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="text-sm font-medium text-gray-500 border-b border-gray-200 dark:border-gray-800">
-              <th scope="col" className="p-4 text-left font-medium">Rank</th>
-              <th scope="col" className="p-4 text-left font-medium">Name</th>
-              <th scope="col" className="p-4 text-left font-medium cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('priceUsd')}>
+            <tr className="text-sm border-b border-gray-200 dark:border-gray-800">
+              <th scope="col" className="p-4 text-left font-medium text-foreground">Rank</th>
+              <th scope="col" className="p-4 text-left font-medium text-foreground">Name</th>
+              <th scope="col" className="p-4 text-left font-medium text-foreground cursor-pointer hover:text-foreground/70" onClick={() => handleSort('priceUsd')}>
                 <span className="inline-flex items-center">
                   Price {getSortIcon('priceUsd')}
                 </span>
               </th>
-              <th scope="col" className="p-4 text-right font-medium cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('marketCapUsd')}>
+              <th scope="col" className="p-4 text-right font-medium text-foreground cursor-pointer hover:text-foreground/70" onClick={() => handleSort('marketCapUsd')}>
                 <span className="inline-flex items-center justify-end">
                   Market Cap {getSortIcon('marketCapUsd')}
                 </span>
               </th>
-              <th scope="col" className="p-4 text-right font-medium">VWAP (24Hr)</th>
-              <th scope="col" className="p-4 text-right font-medium">Supply</th>
-              <th scope="col" className="p-4 text-right font-medium cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('volumeUsd24Hr')}>
+              <th scope="col" className="p-4 text-right font-medium text-foreground">VWAP (24Hr)</th>
+              <th scope="col" className="p-4 text-right font-medium text-foreground">Supply</th>
+              <th scope="col" className="p-4 text-right font-medium text-foreground cursor-pointer hover:text-foreground/70" onClick={() => handleSort('volumeUsd24Hr')}>
                 <span className="inline-flex items-center justify-end">
                   Volume (24Hr) {getSortIcon('volumeUsd24Hr')}
                 </span>
               </th>
-              <th scope="col" className="p-4 text-right font-medium cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('changePercent24Hr')}>
+              <th scope="col" className="p-4 text-right font-medium text-foreground cursor-pointer hover:text-foreground/70" onClick={() => handleSort('changePercent24Hr')}>
                 <span className="inline-flex items-center justify-end">
                   Change (24Hr) {getSortIcon('changePercent24Hr')}
                 </span>
@@ -323,9 +323,34 @@ export function CryptoList() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-            {filteredAndSortedList.map((crypto) => (
-              <CryptoListItem key={crypto.id} asset={crypto} />
-            ))}
+            {loading ? (
+              // Loading skeleton rows
+              Array.from({ length: 10 }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="p-4">
+                    <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-8" />
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 bg-gray-100 dark:bg-gray-800 rounded-full" />
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-24" />
+                        <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-16" />
+                      </div>
+                    </div>
+                  </td>
+                  {Array.from({ length: 6 }).map((_, j) => (
+                    <td key={j} className="p-4">
+                      <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-20 ml-auto" />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              filteredAndSortedList.map((crypto) => (
+                <CryptoListItem key={crypto.id} asset={crypto} />
+              ))
+            )}
           </tbody>
         </table>
       </div>

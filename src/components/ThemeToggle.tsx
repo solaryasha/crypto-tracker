@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
 export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
@@ -48,19 +48,6 @@ export function ThemeToggle() {
               <Moon className="w-4 h-4" />
               <span className="text-sm">Dark</span>
             </button>
-            <button
-              onClick={() => {
-                setTheme('system');
-                setIsOpen(false);
-              }}
-              className={`p-2 rounded-md flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                theme === 'system' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-800 dark:text-gray-200'
-              }`}
-              aria-label="Use system theme"
-            >
-              <Monitor className="w-4 h-4" />
-              <span className="text-sm">System</span>
-            </button>
           </div>
         )}
         <button
@@ -70,8 +57,6 @@ export function ThemeToggle() {
         >
           {theme === 'dark' ? (
             <Moon className="w-5 h-5 text-gray-800 dark:text-gray-200" />
-          ) : theme === 'system' ? (
-            <Monitor className="w-5 h-5 text-gray-800 dark:text-gray-200" />
           ) : (
             <Sun className="w-5 h-5 text-gray-800 dark:text-gray-200" />
           )}

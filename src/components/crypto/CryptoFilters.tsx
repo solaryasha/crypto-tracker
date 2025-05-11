@@ -70,21 +70,6 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
     onReset();
   };
 
-  const isRangeValid = (): boolean => {
-    if (range.min === '' && range.max === '') return false;
-    if (range.min === '' || range.max === '') return true;
-    const min = Number(stripCommas(range.min));
-    const max = Number(stripCommas(range.max));
-    return min <= max;
-  };
-
-  const getInputClassName = (value: string): string => {
-    const baseClass = "w-48 p-2 pl-6 bg-white dark:bg-gray-900 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white";
-    if (value === '') return `${baseClass} border-gray-200 dark:border-gray-700`;
-    if (!isRangeValid()) return `${baseClass} border-red-500 bg-red-50 dark:bg-red-900/50`;
-    return `${baseClass} border-gray-200 dark:border-gray-700`;
-  };
-
   const handleApply = () => {
     if (!isRangeValid()) return;
     onApplyFilter({
@@ -96,13 +81,28 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
     });
   };
 
+  const isRangeValid = (): boolean => {
+    if (range.min === '' && range.max === '') return false;
+    if (range.min === '' || range.max === '') return true;
+    const min = Number(stripCommas(range.min));
+    const max = Number(stripCommas(range.max));
+    return min <= max;
+  };
+
+  const getInputClassName = (value: string): string => {
+    const baseClass = "w-48 p-2 pl-6 bg-background border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-foreground";
+    if (value === '') return `${baseClass} border-gray-200 dark:border-gray-700`;
+    if (!isRangeValid()) return `${baseClass} border-red-500 bg-red-50 dark:bg-red-900/50`;
+    return `${baseClass} border-gray-200 dark:border-gray-700`;
+  };
+
   return (
-    <div className="flex flex-col gap-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="flex flex-col gap-4 p-4 bg-background rounded-lg border border-gray-200 dark:border-gray-700">
       <div className="flex flex-wrap items-center gap-4">
         <select
           value={field}
           onChange={(e) => setField(e.target.value as FilterField)}
-          className="p-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+          className="p-2 bg-background border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-foreground"
         >
           <option value="priceUsd">Price (USD)</option>
           <option value="volumeUsd24Hr">Volume 24h (USD)</option>
@@ -111,7 +111,7 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
         </select>
         
         <div className="flex items-center gap-2">
-          <span className="text-gray-600 dark:text-gray-400">$</span>
+          <span className="text-foreground/70">$</span>
           <input
             type="text"
             placeholder="Min"
@@ -122,7 +122,7 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
         </div>
         
         <div className="flex items-center gap-2">
-          <span className="text-gray-600 dark:text-gray-400">$</span>
+          <span className="text-foreground/70">$</span>
           <input
             type="text"
             placeholder="Max"
@@ -142,7 +142,7 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
         
         <button
           onClick={handleReset}
-          className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
+          className="px-4 py-2 border border-gray-200 dark:border-gray-700 bg-card text-card-foreground rounded hover:bg-accent focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
         >
           Reset
         </button>

@@ -4,6 +4,8 @@ import { Asset } from '@/types/coincap';
 import Link from 'next/link';
 import { PriceTicker } from './PriceTicker';
 import { formatNumber } from '@/utils/numberFormat';
+import { useTheme } from 'next-themes';
+import cn from 'classnames';
 
 interface CryptoListItemProps {
   asset: Asset;
@@ -16,9 +18,13 @@ export function CryptoListItem({ asset }: CryptoListItemProps) {
   const vwap = parseFloat(asset.vwap24Hr);
   const supply = parseFloat(asset.supply);
   const volume = parseFloat(asset.volumeUsd24Hr);
+  const { theme } = useTheme();
   
   return (
-    <tr className="hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
+    <tr className={cn("transition-colors", {
+      'hover:bg-gray-200': theme === 'light',
+      'dark:hover:bg-gray-900': theme === 'dark',
+    })}>
       <td className="p-4 text-gray-500">{asset.rank}</td>
 
       <td className="p-4">
