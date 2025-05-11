@@ -22,29 +22,31 @@ export function CryptoList() {
   const searchParams = useSearchParams();
   const { list, loading, error } = useAppSelector((state) => state.cryptos);
   const eventSourceRef = useRef<EventSource | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey | null>(() => {
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [activeFilter, setActiveFilter] = useState<FilterConfig | null>(null);
+
+  // Initialize search params after mount
+  useEffect(() => {
     const key = searchParams.get('sort');
-    return (key as SortKey) || null;
-  });
-  const [sortDirection, setSortDirection] = useState<SortDirection>(() => {
-    return (searchParams.get('order') as SortDirection) || 'desc';
-  });
-  const [activeFilter, setActiveFilter] = useState<FilterConfig | null>(() => {
+    const order = searchParams.get('order');
     const field = searchParams.get('filterField');
     const min = searchParams.get('filterMin');
     const max = searchParams.get('filterMax');
 
+    setSortKey(key as SortKey || null);
+    setSortDirection((order as SortDirection) || 'desc');
+
     if (field && (min || max)) {
-      return {
+      setActiveFilter({
         field: field as FilterField,
         range: {
           min: min || '',
           max: max || ''
         }
-      };
+      });
     }
-    return null;
-  });
+  }, [searchParams]);
 
   const updateQueryParams = useCallback((params: {
     sort?: string | null;
