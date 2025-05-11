@@ -1,3 +1,5 @@
+'use client';
+
 import { ChangeEvent, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { ReactElement } from 'react';
@@ -31,9 +33,8 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
 
   const formatNumberWithCommas = (value: string): string => {
     if (!value) return '';
-    // Remove any non-digit characters except commas for length check
     const digitsOnly = value.replace(/[^\d]/g, '');
-    if (digitsOnly.length > 15) return range.min; // Prevent input if exceeds 15 digits
+    if (digitsOnly.length > 15) return range.min;
     
     const number = Number(value.replace(/,/g, ''));
     if (isNaN(number)) return value;
@@ -70,23 +71,18 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
   };
 
   const isRangeValid = (): boolean => {
-    // If both values are empty, return false as there's nothing to filter
     if (range.min === '' && range.max === '') return false;
-    
-    // If only one value is provided, it's valid
     if (range.min === '' || range.max === '') return true;
-    
-    // If both values are provided, check if min <= max
     const min = Number(stripCommas(range.min));
     const max = Number(stripCommas(range.max));
     return min <= max;
   };
 
   const getInputClassName = (value: string): string => {
-    const baseClass = "w-48 p-2 pl-6 bg-gray-900 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-white";
-    if (value === '') return `${baseClass} border-gray-700`;
-    if (!isRangeValid()) return `${baseClass} border-red-500 bg-red-900/50`;
-    return `${baseClass} border-gray-700`;
+    const baseClass = "w-48 p-2 pl-6 bg-white dark:bg-gray-900 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white";
+    if (value === '') return `${baseClass} border-gray-200 dark:border-gray-700`;
+    if (!isRangeValid()) return `${baseClass} border-red-500 bg-red-50 dark:bg-red-900/50`;
+    return `${baseClass} border-gray-200 dark:border-gray-700`;
   };
 
   const handleApply = () => {
@@ -101,12 +97,12 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 bg-gray-800 rounded-lg">
-      <div className="flex items-center gap-4">
+    <div className="flex flex-col gap-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="flex flex-wrap items-center gap-4">
         <select
           value={field}
           onChange={(e) => setField(e.target.value as FilterField)}
-          className="p-2 bg-gray-900 border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+          className="p-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
         >
           <option value="priceUsd">Price (USD)</option>
           <option value="volumeUsd24Hr">Volume 24h (USD)</option>
@@ -115,7 +111,7 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
         </select>
         
         <div className="flex items-center gap-2">
-          <span className="text-gray-400">$</span>
+          <span className="text-gray-600 dark:text-gray-400">$</span>
           <input
             type="text"
             placeholder="Min"
@@ -126,7 +122,7 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
         </div>
         
         <div className="flex items-center gap-2">
-          <span className="text-gray-400">$</span>
+          <span className="text-gray-600 dark:text-gray-400">$</span>
           <input
             type="text"
             placeholder="Max"
@@ -146,7 +142,7 @@ export function CryptoFilters({ onApplyFilter, onReset }: CryptoFiltersProps): R
         
         <button
           onClick={handleReset}
-          className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
+          className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
         >
           Reset
         </button>
