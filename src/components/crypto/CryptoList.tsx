@@ -309,14 +309,22 @@ export function CryptoList() {
                   Price {getSortIcon('priceUsd')}
                 </span>
               </th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground transition-opacity cursor-pointer group" onClick={() => handleSort('marketCapUsd')}>
+              <th scope="col" className="p-4 text-right font-medium text-foreground transition-opacity cursor-pointer group hidden sm:table-cell" onClick={() => handleSort('marketCapUsd')}>
                 <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
                   Market Cap {getSortIcon('marketCapUsd')}
                 </span>
               </th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground">VWAP (24Hr)</th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground">Supply</th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground transition-opacity cursor-pointer group" onClick={() => handleSort('volumeUsd24Hr')}>
+              <th scope="col" className="p-4 text-right font-medium text-foreground hidden md:table-cell transition-opacity cursor-pointer group" onClick={() => handleSort('vwap')}>
+                <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
+                  VWAP (24Hr)
+                </span>
+              </th>
+              <th scope="col" className="p-4 text-right font-medium text-foreground hidden lg:table-cell transition-opacity cursor-pointer group" onClick={() => handleSort('supply')}>
+                <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
+                  Supply
+                </span>
+              </th>
+              <th scope="col" className="p-4 text-right font-medium text-foreground hidden md:table-cell transition-opacity cursor-pointer group" onClick={() => handleSort('volumeUsd24Hr')}>
                 <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
                   Volume (24Hr) {getSortIcon('volumeUsd24Hr')}
                 </span>
