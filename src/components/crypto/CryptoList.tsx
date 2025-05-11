@@ -16,6 +16,25 @@ import { setError } from '@/store/slices/cryptosSlice';
 type SortKey = 'priceUsd' | 'volumeUsd24Hr' | 'changePercent24Hr' | 'marketCapUsd';
 type SortDirection = 'asc' | 'desc';
 
+interface TableHeader {
+  key: string;
+  label: string;
+  sortKey?: SortKey;
+  align?: 'left' | 'right';
+  responsive?: string;
+}
+
+const TABLE_HEADERS: TableHeader[] = [
+  { key: 'rank', label: 'Rank', align: 'left' },
+  { key: 'name', label: 'Name', align: 'left' },
+  { key: 'price', label: 'Price', sortKey: 'priceUsd', align: 'left' },
+  { key: 'marketCap', label: 'Market Cap', sortKey: 'marketCapUsd', align: 'right', responsive: 'hidden sm:table-cell' },
+  { key: 'vwap', label: 'VWAP (24Hr)', align: 'right', responsive: 'hidden md:table-cell' },
+  { key: 'supply', label: 'Supply', align: 'right', responsive: 'hidden lg:table-cell' },
+  { key: 'volume', label: 'Volume (24Hr)', sortKey: 'volumeUsd24Hr', align: 'right', responsive: 'hidden md:table-cell' },
+  { key: 'change', label: 'Change (24Hr)', sortKey: 'changePercent24Hr', align: 'right' },
+];
+
 export function CryptoList() {
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -177,38 +196,20 @@ export function CryptoList() {
         <table className="w-full">
           <thead>
             <tr className="text-sm border-b border-gray-200 dark:border-gray-800">
-              <th scope="col" className="p-4 text-left font-medium text-foreground">Rank</th>
-              <th scope="col" className="p-4 text-left font-medium text-foreground">Name</th>
-              <th scope="col" className="p-4 text-left font-medium text-foreground transition-opacity cursor-pointer group" onClick={() => handleSort('priceUsd')}>
-                <span className="inline-flex items-center opacity-100 group-hover:opacity-60">
-                  Price {getSortIcon('priceUsd')}
-                </span>
-              </th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground transition-opacity cursor-pointer group hidden sm:table-cell" onClick={() => handleSort('marketCapUsd')}>
-                <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
-                  Market Cap {getSortIcon('marketCapUsd')}
-                </span>
-              </th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground hidden md:table-cell transition-opacity cursor-pointer group">
-                <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
-                  VWAP (24Hr)
-                </span>
-              </th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground hidden lg:table-cell transition-opacity cursor-pointer group">
-                <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
-                  Supply
-                </span>
-              </th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground hidden md:table-cell transition-opacity cursor-pointer group" onClick={() => handleSort('volumeUsd24Hr')}>
-                <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
-                  Volume (24Hr) {getSortIcon('volumeUsd24Hr')}
-                </span>
-              </th>
-              <th scope="col" className="p-4 text-right font-medium text-foreground transition-opacity cursor-pointer group" onClick={() => handleSort('changePercent24Hr')}>
-                <span className="inline-flex items-center justify-end opacity-100 group-hover:opacity-60">
-                  Change (24Hr) {getSortIcon('changePercent24Hr')}
-                </span>
-              </th>
+              {TABLE_HEADERS.map(header => (
+                <th
+                  key={header.key}
+                  scope="col"
+                  className={`p-4 font-medium text-foreground ${header.sortKey ? 'transition-opacity cursor-pointer group' : ''
+                    } ${header.responsive || ''} text-${header.align}`}
+                  onClick={header.sortKey ? () => handleSort(header.sortKey!) : undefined}
+                >
+                  <span className={`inline-flex items-center ${header.align === 'right' ? 'justify-end' : ''
+                    } ${header.sortKey ? 'opacity-100 group-hover:opacity-60' : ''}`}>
+                    {header.label} {header.sortKey && getSortIcon(header.sortKey)}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
