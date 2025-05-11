@@ -1,18 +1,17 @@
 'use client';
 
-import { useEffect, useCallback, useRef, useState, useMemo } from 'react';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { CryptoListItem } from './CryptoListItem';
 import { CryptoFilters, FilterConfig, FilterField } from './CryptoFilters';
 import { CryptoTableSkeleton } from './CryptoTableSkeleton';
-import { coincapApi } from '@/services/coincapApi';
-import { setLoading, setCryptos, setError, updatePrice } from '@/store/slices/cryptosSlice';
 import { ErrorMessage } from '@/components/errors/ErrorMessage';
 import { Toast } from '@/components/errors/Toast';
-import { ErrorHandler } from '@/services/errorHandling';
-import { Asset } from '@/types/coincap';
 import { ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
+import { useCryptoDataFetching } from '@/hooks/useCryptoDataFetching';
+import { ErrorHandler } from '@/services/errorHandling';
+import { setError } from '@/store/slices/cryptosSlice';
 
 type SortKey = 'priceUsd' | 'volumeUsd24Hr' | 'changePercent24Hr' | 'marketCapUsd';
 type SortDirection = 'asc' | 'desc';
@@ -22,7 +21,7 @@ export function CryptoList() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { list, loading, error } = useAppSelector((state) => state.cryptos);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const { fetchCryptos } = useCryptoDataFetching();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [activeFilter, setActiveFilter] = useState<FilterConfig | null>(null);
@@ -70,78 +69,6 @@ export function CryptoList() {
     const newUrl = queryString ? `?${queryString}` : window.location.pathname;
     router.push(newUrl);
   }, [router, searchParams]);
-
-  const fetchCryptos = useCallback(async () => {
-    dispatch(setLoading(true));
-    try {
-      const assets = await coincapApi.getTopAssets();
-      dispatch(setCryptos(assets));
-    } catch (err) {
-      const isOffline = !window.navigator.onLine;
-      const category = isOffline ? 'network' : 'api';
-      dispatch(setError(
-        ErrorHandler.createError(
-          err instanceof Error ? err.message : 'Failed to fetch cryptocurrencies',
-          category,
-          'major'
-        )
-      ));
-    } finally {
-      dispatch(setLoading(false));
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
-    fetchCryptos();
-
-    // Set up SSE connection
-    eventSourceRef.current = new EventSource('/api/prices');
-
-    eventSourceRef.current.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.error) {
-          dispatch(setError(
-            ErrorHandler.createError(
-              data.error,
-              'api',
-              'minor'
-            )
-          ));
-          return;
-        }
-
-        if (data.assets) {
-          data.assets.forEach((asset: Asset) => {
-            dispatch(updatePrice({ id: asset.id, priceUsd: asset.priceUsd }));
-          });
-        }
-      } catch {
-        dispatch(setError(
-          ErrorHandler.createError(
-            'Failed to process price update',
-            'api',
-            'minor'
-          )
-        ));
-      }
-    };
-
-    eventSourceRef.current.onerror = () => {
-      dispatch(setError(
-        ErrorHandler.createError(
-          'Lost connection to price updates',
-          'network',
-          'minor'
-        )
-      ));
-    };
-
-    return () => {
-      eventSourceRef.current?.close();
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleSort = (key: SortKey) => {
     const newDirection = sortKey === key && sortDirection === 'desc' ? 'asc' : 'desc';

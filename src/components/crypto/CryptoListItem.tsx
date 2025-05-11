@@ -7,6 +7,7 @@ import { formatNumber } from '@/utils/numberFormat';
 import { useTheme } from 'next-themes';
 import cn from 'classnames';
 import { useRouter } from 'next/navigation';
+import { use, useEffect, useState } from 'react';
 
 interface CryptoListItemProps {
   asset: Asset;
@@ -21,14 +22,33 @@ export function CryptoListItem({ asset }: CryptoListItemProps) {
   const volume = parseFloat(asset.volumeUsd24Hr);
   const { theme } = useTheme();
   const router = useRouter();
+  const [priceChangeDirection, setPriceChangeDirection] = useState<'up' | 'down' | null>(null);
 
   const handleRowClick = () => {
     router.push(`/coin/${asset.id}`);
   };
-  
+
+  const handlePriceChange = (direction: 'up' | 'down' | null) => {
+    setPriceChangeDirection(direction);
+  };
+
+  const rowClass = priceChangeDirection === 'up'
+    ? 'bg-green-100 dark:bg-green-900'
+    : priceChangeDirection === 'down'
+      ? 'bg-red-100 dark:bg-red-900'
+      : '';
+
+  useEffect(() => {
+    if (priceChangeDirection) {
+      const timer = setTimeout(() => {
+        setPriceChangeDirection(null);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [priceChangeDirection]);
   return (
     <tr
-      className={cn("transition-colors cursor-pointer", {
+      className={cn("transition-colors cursor-pointer border-b border-gray-200 dark:border-gray-700", rowClass, {
         'hover:bg-gray-200': theme === 'light',
         'dark:hover:bg-gray-900': theme === 'dark',
       })}
@@ -46,7 +66,7 @@ export function CryptoListItem({ asset }: CryptoListItemProps) {
       </td>
 
       <td className="p-4 font-mono">
-        <PriceTicker price={price} />
+        <PriceTicker price={price} onPriceChangeDirection={handlePriceChange} />
       </td>
 
       <td className="p-4 font-mono text-right hidden sm:table-cell">

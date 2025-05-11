@@ -4,39 +4,30 @@ interface PriceTickerProps {
   price: number;
   className?: string;
   showSmallDecimals?: boolean;
+  onPriceChangeDirection?: (direction: 'up' | 'down' | null) => void;
 }
 
-export function PriceTicker({ price, className = '', showSmallDecimals = false }: PriceTickerProps) {
-  const [priceChange, setPriceChange] = useState<'up' | 'down' | null>(null);
+export function PriceTicker({ price, className = '', showSmallDecimals = false, onPriceChangeDirection }: PriceTickerProps) {
   const previousPrice = useRef(price);
 
   useEffect(() => {
     if (price !== previousPrice.current) {
-      setPriceChange(price > previousPrice.current ? 'up' : 'down');
+      const direction = price > previousPrice.current ? 'up' : 'down';
+      if (onPriceChangeDirection) {
+        onPriceChangeDirection(direction);
+      }
       previousPrice.current = price;
-
-      // Reset the animation after it plays
-      const timer = setTimeout(() => {
-        setPriceChange(null);
-      }, 1000);
-
-      return () => clearTimeout(timer);
     }
-  }, [price]);
+  }, [price, onPriceChangeDirection]);
 
   const formattedPrice = price.toLocaleString('en-US', {
     minimumFractionDigits: showSmallDecimals ? 4 : 2,
     maximumFractionDigits: showSmallDecimals ? 4 : 2
   });
 
-  const animationClass = priceChange === 'up' 
-    ? 'text-green-600 dark:text-green-400 animate-price-up' 
-    : priceChange === 'down' 
-      ? 'text-red-600 dark:text-red-400 animate-price-down' 
-      : '';
 
   return (
-    <span className={`transition-colors ${animationClass} ${className}`}>
+    <span className={`transition-colors ${className}`}>
       ${formattedPrice}
     </span>
   );
