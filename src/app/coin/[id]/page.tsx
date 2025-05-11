@@ -92,7 +92,6 @@ export default function CoinDetailPage({ params }: CoinDetailPageProps) {
     };
 
     return () => {
-      console.log('Closing SSE connection');
       eventSourceRef.current?.close();
       dispatch(clearCoin());
     };

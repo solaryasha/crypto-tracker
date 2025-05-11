@@ -27,7 +27,6 @@ export const coincapApi = {
           'Authorization': `Bearer ${apiKey}`
         }
       });
-      console.log('Response:', response); // Debugging line
       if (!response.ok) {
         throw ErrorHandler.createError(
           `HTTP error! status: ${response.status}`,
@@ -61,7 +60,6 @@ export const coincapApi = {
           'Authorization': `Bearer ${apiKey}`
         }
       });
-      console.log('Response GET BY ID:', response); // Debugging line
       if (!response.ok) {
         throw ErrorHandler.createError(
           `HTTP error! status: ${response.status}`,
@@ -74,10 +72,9 @@ export const coincapApi = {
       return data.data;
     } catch (error) {
       if (isAppError(error)) {
-        console.error('AppError:', error); // Log the AppError
+
         throw error; // Already an AppError
       }
-      console.error('Error:', error); // Log the error
       throw ErrorHandler.createError(
         error instanceof Error ? error.message : `Failed to fetch asset by ID: ${id}`,
         'api',

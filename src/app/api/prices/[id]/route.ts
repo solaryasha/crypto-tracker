@@ -47,12 +47,12 @@ export async function GET(
         await sendPriceUpdate();
 
         // Set up interval for updates
-        // const intervalId = setInterval(sendPriceUpdate, 30000);
+        const intervalId = setInterval(sendPriceUpdate, 30000);
 
         // Clean up on client disconnect
         return () => {
           isConnected = false;
-          // clearInterval(intervalId);
+          clearInterval(intervalId);
         };
       } catch (error) {
         isConnected = false;
