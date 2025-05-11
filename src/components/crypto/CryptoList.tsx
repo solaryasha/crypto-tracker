@@ -40,11 +40,12 @@ export function CryptoList() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { list, loading, error } = useAppSelector((state) => state.cryptos);
-  const { fetchCryptos } = useCryptoDataFetching();
+  
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [activeFilter, setActiveFilter] = useState<FilterConfig | null>(null);
 
+  useCryptoDataFetching();
   // Initialize search params after mount
   useEffect(() => {
     const key = searchParams.get('sort');
@@ -175,7 +176,7 @@ export function CryptoList() {
     return (
       <>
         {error.severity === 'major' ? (
-          <ErrorMessage error={error} onRetry={fetchCryptos} />
+          <ErrorMessage error={error} />
         ) : (
           <Toast
             error={error}

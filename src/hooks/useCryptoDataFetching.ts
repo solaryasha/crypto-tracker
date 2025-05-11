@@ -82,7 +82,7 @@ export function useCryptoDataFetching() {
       eventSourceRef.current?.close();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchCryptos, handleError]); // Added fetchCryptos and handleError to dependency array
+  }, []); // Added fetchCryptos and handleError to dependency array
 
   return { fetchCryptos };
 }
